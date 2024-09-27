@@ -1,12 +1,12 @@
 ---
 title: "Hate Crime in Toronto"
-subtitle: "What is the Primary Reason for Hate Crime?"
+subtitle: "Deep Investigation in Hate Crime"
 author: 
   - Jingtao Luo
-thanks: "Code and data are available at: LINK."
+thanks: "Code and data are available at: https://github.com/JerryLuoJT/Hate_Crime_Toronto"
 date: today
-date-format: "D MMMM YYYY"
-abstract: "First sentence. Second sentence. Third sentence. Fourth sentence."
+date-format: "DD MMMM YYYY"
+abstract: "This paper analyzed the Hate Crime Open Data, which is free and available to the public on Open Data Toronto. The paper investigated distribution of hate crime in Toronto based on year, reason and neighbourhood. In summary, the hate crime has increased in last 6 years, and the most often reason is religion bias, and the Yonge-Bay Corridor has the largest amount of hate crimes. These findings can help the government understand hate crime better, and thus protect the citizens.  "
 format: pdf
 number-sections: true
 bibliography: references.bib
@@ -49,184 +49,182 @@ According to government of Canada [@govCan], hate crime is defined as criminal a
 
 Despite Toronto’s inclusive policies and progressive reputation, the city has not been immune to the global rise in hate-fueled violence. In recent years, incidents targeting specific communities—including Muslim, Jewish, Black, and LGBTQ+ populations—have underscored the persistent challenges that marginalized groups face. While hate crimes constitute only a fraction of overall crime, their impacts are disproportionately harmful, not only to direct victims but also to the broader communities they belong to, fostering fear, division, and alienation.
 
-This paper aims to analyze the hate crimes in the following perspectives: when, where and why. When means the amount of crimes happened in each year. Where means the neighborhood of the hate crime occoured. And why is the reason that triggered this hate crime.
+This paper aims to analyze the hate crimes in the following perspectives: when, where and why. When means the amount of crimes happened in each year. Where means the neighborhood of the hate crime occurred. And why is the reason that triggered this hate crime.
 
-STILL MISSING!
+The Data @sec-data of this paper explores the `opendatatoronto` data, with tools in R and methods used to analyze the data and some observations from the new dataset. The Results @sec-results introduces more observations found from the data analysis by visualizing the data. The Discussion @sec-disc ties back the findings with the situation in real world. Lastly, the Conclusion @sec-concl summarizes key findings and gives insight for further study.
 
 # Data {#sec-data}
 
-All relevant data can be found in the Open Data Toronto portal, and extracted using the `opendatatoronto` library for `R` [@rOpendatatoronto]. In particular, the dataset includes the 
-information about each hate crime, investigated by the Hate Crime Unit by reported date since 2018.
+All relevant data can be found in the Open Data Toronto portal, and extracted using the `opendatatoronto` library for `R` [@rOpendatatoronto]. In particular, the original dataset includes the information about each hate crime, investigated by the Hate Crime Unit by reported date since 2018, and its latest update was on 17 September, 2024. The information incluedes each crime's offence number, the exact date of occurance, the exact date of report, the police division where offence happened, the reason caused this hate crime, the neighborhood of such crime occurred, and if there is people got arrested.
+
+## Data Tools
+
+The data was extracted, cleaned and analysed using `R` [@citeR], with functions from `tidyverse` [@rTidyverse], `ggplot2` [@rGgplot2], `dplyr` [@rDplyr], `readr` [@rReadr], `opendatatoronto` [@rOpendatatoronto], `knitr` [@rKnitr], and `here` [@rHere].
+
+## Overview of Dataset
+
+The selected dataset has selected some of the variables that will be discussed later in the paper. The selected variables are id, year of crime occurred; reasons of hate crime: age, mental or physical disability, race, ethnicity, language, religion, sexual orientation, gender; and the neighborhood of this crime occurred. See `Table 1` for an overview of the data.
 
 ```{r}
-#| label: fig-bills
-#| fig-cap: Bills of penguins
+#| label: hc_overview
+#| fig-cap: 'Table 1: Sample of Hate Crime Open Data'
 #| echo: false
-
+# use 'knitr' generate a table of cleaned data for overview
+knitr::kable(head(data[, 1:4]), "simple",   col.names = c('ID', 'Year', 'Bias Type','Neighbourhood'))
 
 ```
 
-Talk more about it.
+The column "Bias Type" is not on the original dataset, instead, the original one has variables for each type of bias, I use the "Bias Type" variable which stores the name of bias(data type: character) so this is easier for later calculation. In the original dataset, there are one more bias called multiple bias, which indicates that the crime is caused by more than one bias. Multiple bias may cause over-counting in other bias, so for easier calculation I didn't select crimes with multiple bias. Also, in the Neighbourhood variable, I find that some of the crimes didn't have information about neighbourhood, so I removed crime with "NSA" in the 'neighbouhood_158' column.
 
-And also planes (@fig-planes). (You can change the height and width, but don't worry about doing that until you have finished every other aspect of the paper - Quarto will try to make it look nice and the defaults usually work well once you have enough text.)
-
+## Distribution of Hate Crimes per Year
+The average number of hate crimes per year is 193. However, the range of crime is very wide: from 111 in 2018 up to 329 in 2023.
 ```{r}
-#| label: fig-planes
-#| fig-cap: Relationship between wing length and width
+#| label: hc-by-year
+#| fig-cap: "Table 2: Count of Hate Crime by Year"
 #| echo: false
-#| warning: false
-#| message: false
+#| 
+# count each row by year, and store the value in a new dataset
+hc_by_year <- data %>% group_by(occurrence_year) %>%
+  summarize(count = n())
+# use 'knitr' generate how many crime per year
+knitr::kable(hc_by_year,
+             col.names = c('Year', 'Total Crimes'))
 
-analysis_data <- read_csv(here::here("data/analysis_data/analysis_data.csv"))
-
-analysis_data |> 
-  ggplot(aes(x = width, y = length)) +
-  geom_point(alpha = 0.8) +
-  theme_minimal() +
-  labs(x = "Wing width (mm)",
-       y = "Wing length (mm)")
 ```
 
-Talk way more about it. 
-
-
-
-# Model
-
-The goal of our modelling strategy is twofold. Firstly,...
-
-Here we briefly describe the Bayesian analysis model used to investigate... Background details and diagnostics are included in [Appendix -@sec-model-details].
-
-## Model set-up
-
-Define $y_i$ as the number of seconds that the plane remained aloft. Then $\beta_i$ is the wing width and $\gamma_i$ is the wing length, both measured in millimeters.  
-
-\begin{align} 
-y_i|\mu_i, \sigma &\sim \mbox{Normal}(\mu_i, \sigma) \\
-\mu_i &= \alpha + \beta_i + \gamma_i\\
-\alpha &\sim \mbox{Normal}(0, 2.5) \\
-\beta &\sim \mbox{Normal}(0, 2.5) \\
-\gamma &\sim \mbox{Normal}(0, 2.5) \\
-\sigma &\sim \mbox{Exponential}(1)
-\end{align}
-
-We run the model in R [@citeR] using the `rstanarm` package of @rstanarm. We use the default priors from `rstanarm`.
-
-
-### Model justification
-
-We expect a positive relationship between the size of the wings and time spent aloft. In particular...
-
-We can use maths by including latex between dollar signs, for instance $\theta$.
-
-
-# Results
-
-Our results are summarized in @tbl-modelresults.
-
+## Distribution of Hate Crimes by Bias
+Here we want to count the number of hate crime based on the bias that caused it. In the raw dataset, as I have mentioned before, we have 8 bias. However, after we delete the crimes with multiple bias or don't have the neighborhood information, we only have 6 bias in the dataset: age bias and disability bias are not in the cleaned dataset anymore.
 ```{r}
+#| label: hc-by-bias
+#| fig-cap: "Table 3: Count of Hate Crime by Bias"
 #| echo: false
-#| eval: true
-#| warning: false
-#| message: false
+#| 
+# count each row by bias type, and store the value in a new dataset
+hc_by_bias <- data %>% group_by(bias_type) %>%
+  summarize(count = n())
+# use 'knitr' generate how many crime by bias types
+knitr::kable(hc_by_bias,
+             col.names = c('Bias Type', 'Total Crimes'))
 
-library(rstanarm)
 
-first_model <-
-  readRDS(file = here::here("models/first_model.rds"))
 ```
-
+The average number of crimes for each bias is 193.5. The range of number of crimes in different bias vary largely, from 3 to 516, this make me consider whether we have outlier. The lower bound and upper bound I calculated(See 'Table 4') indicating no outlier in this dataset.
 ```{r}
+#| label: hc-by-bias-IQR
+#| fig-cap: "Table 4: Bounds of Table 3's Data "
 #| echo: false
-#| eval: true
-#| label: tbl-modelresults
-#| tbl-cap: "Explanatory models of flight time based on wing width and wing length"
-#| warning: false
 
-modelsummary::modelsummary(
-  list(
-    "First model" = first_model
-  ),
-  statistic = "mad",
-  fmt = 2
+#Check if there is outlier
+#Calculate Q1, Q3, and IQR
+Q1 <- as.numeric(quantile(hc_by_bias$count, 0.25)) 
+Q3 <- as.numeric(quantile(hc_by_bias$count, 0.75))
+IQR <- Q3 - Q1
+
+#Find bounds
+lower_bound <- Q1 - 1.5 * IQR
+upper_bound <- Q3 + 1.5 * IQR
+#Summarize the data into a data frame
+summary_table <- data.frame(summary_table <- data.frame(
+  Q1 = Q1,
+  Q3 = Q3,
+  IQR = IQR,
+  Lower_Bound = lower_bound,
+  Upper_Bound = upper_bound
 )
+)
+
+# Display the table using knitr::kable
+knitr::kable(summary_table)
+
+```
+
+## Distribution of Hate Crime by Neighbourhood
+I am curious about which neighbourhood in Toronto has the most hate crimes, so I count the data by variable 'neighbourhood_158', which store the neighbourhood name of each crime based on City of Toronto's new 158 neighbourhood structure. See 'Table 5' for a sample of dataset.
+```{r}
+#| label: hc-by-nbh
+#| fig-cap: "Table 5: Sample of Count of Hate Crime by Neighbourhood"
+#| echo: false
+#| 
+# count each row by neighbourhood, and store the value in a new dataset
+hc_by_nbh <- data %>% group_by(neighbourhood_158) %>%
+  summarize(count = n())
+# use 'knitr' generate a 10-row sample of the dataset
+knitr::kable(head(hc_by_nbh, 10),
+             col.names = c('Neighbourhood', 'Total Crimes'))
 ```
 
 
+# Results {#sec-results}
 
-
-# Discussion
-
-## First discussion point {#sec-first-point}
-
-If my paper were 10 pages, then should be be at least 2.5 pages. The discussion is a chance to show off what you know and what you learnt from all this. 
-
-## Second discussion point
-
-## Third discussion point
-
-## Weaknesses and next steps
-
-Weaknesses and next steps should also be included.
-
-\newpage
-
-\appendix
-
-# Appendix {-}
-
-
-# Additional data details
-
-# Model details {#sec-model-details}
-
-## Posterior predictive check
-
-In @fig-ppcheckandposteriorvsprior-1 we implement a posterior predictive check. This shows...
-
-In @fig-ppcheckandposteriorvsprior-2 we compare the posterior with the prior. This shows... 
+The number of hate crime incidents has increased almost every year except 2019 and 2022. Last year's hate crimes surged to 329, nearly three times as much as the amount in 2018. The scatterplot intuitively shows a rapid growth rate(See 'Figure 1'). From the overall trend, the number of hate crimes is increasing every year.
 
 ```{r}
-#| eval: true
+#| label: hc-year-scatter
+#| fig-cap: "Number of Hate Crimes every year"
 #| echo: false
-#| message: false
-#| warning: false
-#| label: fig-ppcheckandposteriorvsprior
-#| layout-ncol: 2
-#| fig-cap: "Examining how the model fits, and is affected by, the data"
-#| fig-subcap: ["Posterior prediction check", "Comparing the posterior with the prior"]
-
-pp_check(first_model) +
-  theme_classic() +
-  theme(legend.position = "bottom")
-
-posterior_vs_prior(first_model) +
-  theme_minimal() +
-  scale_color_brewer(palette = "Set1") +
-  theme(legend.position = "bottom") +
-  coord_flip()
+#Use 'ggplot()' to generate the scatterplot based on the hc_by_year data
+ggplot(hc_by_year, aes(x = occurrence_year, y =count)) +
+  # Add scatterplot points
+  geom_point(color='darkred') +
+  # Add line connecting the points
+  geom_line(color='darkred') +  
+  # Add axis labels and title
+  labs(
+       x = "Year",
+       y = "Hate Crimes",
+       ) +
+  theme_minimal()
 ```
 
-## Diagnostics
-
-@fig-stanareyouokay-1 is a trace plot. It shows... This suggests...
-
-@fig-stanareyouokay-2 is a Rhat plot. It shows... This suggests...
+The average of hate crime by each bias type is 193.5 and the median is 142.5. We have showed that there is no outlier based on the interquantile range test. From the graph (see Figure 2) we can say most of the causes are ethnicity, sex, race and religion. More particularly, religion bias is the number one cause for hate crime, and is way more than other bias.
 
 ```{r}
+#| label: hc-bias-bar
+#| fig-cap: "Hate Crime by Bias Type"
 #| echo: false
-#| eval: true
-#| message: false
-#| warning: false
-#| label: fig-stanareyouokay
-#| fig-cap: "Checking the convergence of the MCMC algorithm"
-#| fig-subcap: ["Trace plot", "Rhat plot"]
-#| layout-ncol: 2
-
-plot(first_model, "trace")
-
-plot(first_model, "rhat")
+ggplot(hc_by_bias, aes(x = reorder(bias_type,count), y = count)) +
+#Create bar plot, choose the color
+  geom_col(fill = "darkred", color = "black") + 
+#Add name for x,y axis
+  labs(x = "Bias Type", 
+       y = "Count") +
+  theme_minimal() 
 ```
+
+The distribution by neighbourhood tells more stories. Since there are 158 neighbourhoods in Toronto, there are about 158 groups if I want to group by variable 'neighbourhood_158', which is too messy for a bar plot. So I use histogram to show the relationship(See Figure 3). The histogram is right-skewed and unimodal.From the graph we can find there are 69 neighbourhood that are have hate crime less than or equal to 5 from 2018 to 2023.There are 6 neighbourhoods have more than 25 crimes.
+
+```{r}
+#| label: hc-neighbourhood-bar
+#| fig-cap: "Histogram of Hate Crime by Neighbourhood"
+#| echo: false
+ggplot(hc_by_nbh, aes(x = count)) +
+  # Create a histogram. Set binwidth to 5 
+  geom_histogram(binwidth = 5, fill = "darkred", color = "black", boundary = 0) +  
+  # Set x-axis breaks to match bins
+  scale_x_continuous(breaks = seq(0, 45, by = 5)) + 
+  #Set y-axis breaks to match bins
+  scale_y_continuous(breaks = seq(0, 80, by = 2))+ 
+  #Give name for x,y axis
+  labs(x = "Number of Hate Crimes", 
+       y = "Number of Neighbourhoods") +
+  theme_minimal()
+```
+
+# Discussion {#sec-disc}
+
+These tables and figures give readers a visual and organized understanding of the development and causes of hate crimes. 'Figure 2' shows that most of the hate crimes are caused by religion bias, race bias and sex bias. 'Figure 3' shows that there are 6 neighbourhoods out of 158 are considered as dangerous neighbourhood while the rests have more than 25 hate crimes for recent 6 years. By revisiting the dataset 'hc_by_nbh' and sorting the dataset, I can find those 6 neighbourhoods are: Yonge-Bay Corridor, Church-Wellesley, Annex, Downtown Yonge East, York University Heights and Moss Park.
+
+Algorithm-driven content recommendation systems often exacerbate polarization, leading users into place where different perspectives are diminished, and hate speech proliferates. This growing extremism can incite individuals or groups to escalate from online rhetoric to offline violence. As social media platforms continue to globalize and expand their user base, hate crimes may become more frequent and harder to control, driven by the influence of these platforms. In the near future, increasing in hate crime in Toronto is inevitable as more and more people of different nationalities and beliefs flock to this city, which is also showed in 'Figure 1'. So, the government should try its best to prevent hate crime.
+
+The analyzed data and figures can help the government of Toronto understand the composition of hate crimes and the main areas where they occur. For example, the police can increase the number of patrols in dangerous areas and prevent crimes in time. The propaganda department can support views such as racial equality and religious freedom on social media and educate citizens to respect everyone.
+
+# Conclusion{#sec-concl}
+
+This paper investigated the hate crimes happened in Toronto from 2018 to 2023. The paper discussed the hate crimes' distribution in three aspects: year of occurrence, reason of occurrence, place of occurrence. It demonstrates that, the number of hate crimes is increasing in recent years; the top-three reason for hate crimes are religion bias, race bias and sex bias; among the 158 neighbourhoods in Toronto, 69 of them had less than 5 hate crimes in last 6 years and 6 of them had more than 25 hate crimes in the same period. In future study, I can analyze each bias deeper e.g. which religion experienced most hate crime so that the research can be more detailed.
+
+# LLMs
+
+Statement on LLM usage: no LLMs were used in the making of this paper.
 
 
 

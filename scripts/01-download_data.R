@@ -35,7 +35,6 @@ data <- filter(datastore_resources, row_number()==1) %>% get_resource()
 
 
 #### Save data ####
-# [...UPDATE THIS...]
-# change the_raw_data to whatever name you assigned when you downloaded it.
+# change the_raw_data to name you assigned
 write_csv(hc_raw_data, "data/raw_data/Hate_Crimes_Open_Data.csv") 
 
