@@ -36,6 +36,9 @@ library(here)
 
 #read the cleaned hate crime data
 data <- read_csv(here::here("data/analysis_data/cleanned_data.csv"))
+#generate .gitignore
+install.packages("usethis")
+usethis::git_vaccinate()
 
 
 ```
