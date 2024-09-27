@@ -1,4 +1,3 @@
-# Starter folder
 
 ## Overview
 
